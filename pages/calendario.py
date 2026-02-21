@@ -18,13 +18,14 @@ logging.basicConfig(
 # =========================
 # Función principal
 # =========================
-def mostrar_calendario():
+def mostrar_calendario(empleado_id):
     st.subheader("📅 Calendario General")
 
     logger.info("---- Cargando calendario ----")
 
     df_eventos = obtener_eventos()
     df_empleados = obtener_empleados()
+    df_eventos = df_eventos[df_eventos["empleado_id"] == empleado_id]
 
     logger.info(f"Eventos encontrados: {len(df_eventos)}")
     logger.info(f"Empleados encontrados: {len(df_empleados)}")
@@ -67,15 +68,8 @@ def mostrar_calendario():
     # Popup Agregar / Borrar
     # =========================
     @st.dialog("Agregar / Borrar evento")
-    def popup_agregar(fecha_dt):
+    def popup_agregar(fecha_dt, empleado_id):
         logger.info(f"Abrir popup para fecha {fecha_dt}")
-
-        if df_empleados.empty:
-            st.warning("No hay empleados cargados.")
-            return
-
-        empleado = st.selectbox("Empleado", df_empleados["nombre"])
-        empleado_id = int(df_empleados[df_empleados["nombre"] == empleado]["id"].values[0])
 
         tipo = st.selectbox("Tipo", ["sabado", "descanso"])
         cantidad = st.selectbox("Cantidad", [0.5, 1.0])
@@ -86,13 +80,9 @@ def mostrar_calendario():
             if st.button("Guardar"):
                 logger.info(f"Guardando evento | empleado_id={empleado_id} | tipo={tipo} | cantidad={cantidad}")
                 agregar_evento(empleado_id, fecha_dt, tipo, cantidad)
-                logger.info("Evento guardado correctamente")
                 st.success("Evento agregado")
                 st.rerun()
 
-        # -------------------------
-        # Botón borrar eventos del día
-        # -------------------------
         eventos_del_dia = df_eventos[
             (df_eventos["fecha"] == fecha_dt.strftime("%Y-%m-%d")) &
             (df_eventos["empleado_id"] == empleado_id)
@@ -102,9 +92,8 @@ def mostrar_calendario():
             if not eventos_del_dia.empty:
                 if st.button("Borrar Evento"):
                     for eid in eventos_del_dia["id"]:
-                        logger.info(f"Borrando evento ID={eid}")
                         borrar_evento(eid)
-                    st.warning("Eventos borrados")
+                    st.warning("Evento borrado")
                     st.rerun()
             else:
                 st.write("No hay eventos para borrar")
@@ -116,4 +105,4 @@ def mostrar_calendario():
         fecha_click = selected["dateClick"]["date"][:10]
         logger.info(f"Click en fecha: {fecha_click}")
         fecha_dt = datetime.strptime(fecha_click, "%Y-%m-%d")
-        popup_agregar(fecha_dt)
+        popup_agregar(fecha_dt, empleado_id)

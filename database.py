@@ -4,6 +4,7 @@ from config import DB_NAME
 def conectar():
     return sqlite3.connect(DB_NAME, check_same_thread=False)
 
+
 def crear_tablas():
     conn = conectar()
     cursor = conn.cursor()
@@ -25,6 +26,15 @@ def crear_tablas():
         estado TEXT,
         tipo TEXT,
         fecha_vencimiento TEXT
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        empleado_id INTEGER
     )
     """)
 
